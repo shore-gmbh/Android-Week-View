@@ -153,7 +153,9 @@ public class WeekView extends View {
                     mCurrentScrollDirection = Direction.VERTICAL;
                 }
             }
-            mDistanceX = Math.abs(distanceX)/distanceX * 5;
+            Log.e(TAG, "Distance qui va planter: "+distanceX);
+            mDistanceX = (Math.abs(distanceX)/(distanceX==0?1:distanceX)) * 5;
+            Log.w(TAG, "Distance fraichement settée: "+mDistanceX);
             mDistanceY = distanceY;
             invalidate();
             return true;
@@ -170,7 +172,6 @@ public class WeekView extends View {
                 } else {
                     mScroller.startScroll(0,0,-1,0);
                     mScroller.computeScrollOffset();
-
                 }
             }
             else if (mCurrentFlingDirection == Direction.VERTICAL){
