@@ -16,6 +16,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
@@ -37,6 +38,8 @@ import java.util.List;
  * Website: http://alamkanak.me
  */
 public class WeekView extends View {
+
+    private String TAG = "Calendar Adaptation";
 
     @Deprecated
     public static final int LENGTH_SHORT = 1;
@@ -126,6 +129,9 @@ public class WeekView extends View {
     private boolean displayCurrentTimeLine = false;
     private Paint mCurrentTimeLinePaint;
 
+    // Custom falgs for the days
+    boolean mDayChanged = false;
+
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
         @Override
@@ -147,7 +153,7 @@ public class WeekView extends View {
                     mCurrentScrollDirection = Direction.VERTICAL;
                 }
             }
-            mDistanceX = distanceX;
+            mDistanceX = Math.abs(distanceX)/distanceX * 5;
             mDistanceY = distanceY;
             invalidate();
             return true;
@@ -157,9 +163,15 @@ public class WeekView extends View {
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             mScroller.forceFinished(true);
             mStickyScroller.forceFinished(true);
+            if (mCurrentFlingDirection == Direction.HORIZONTAL) {
+                if (!(e2.getX() < e1.getX())) {
+                    mScroller.startScroll(0,0,1,0);
+                    mScroller.computeScrollOffset();
+                } else {
+                    mScroller.startScroll(0,0,-1,0);
+                    mScroller.computeScrollOffset();
 
-            if (mCurrentFlingDirection == Direction.HORIZONTAL){
-                mScroller.fling((int) mCurrentOrigin.x, 0, (int) (velocityX * mXScrollingSpeed), 0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, 0);
+                }
             }
             else if (mCurrentFlingDirection == Direction.VERTICAL){
                 mScroller.fling(0, (int) mCurrentOrigin.y, 0, (int) velocityY, 0, 0, (int) -(mHourHeight * 24 + mHeaderTextHeight + mHeaderRowPadding * 2 - getHeight()), 0);
@@ -190,7 +202,6 @@ public class WeekView extends View {
                 Calendar selectedTime = getTimeFromPoint(e.getX(), e.getY());
                 if (selectedTime != null) {
                     playSoundEffect(SoundEffectConstants.CLICK);
-                    mEmptyViewClickListener.onEmptyViewClicked(selectedTime);
                 }
             }
 
@@ -426,10 +437,17 @@ public class WeekView extends View {
         }
 
         // Consider scroll offset.
+        Log.d(TAG, "Current origin before transformation "+mCurrentOrigin.x);
+        Log.d(TAG, "mDistance "+ mDistanceX);
         if (mCurrentScrollDirection == Direction.HORIZONTAL) mCurrentOrigin.x -= mDistanceX;
+        Log.d(TAG, "Current origin after transformation "+mCurrentOrigin.x);
+        Log.d(TAG, "Scroll direction: "+mCurrentScrollDirection);
         int leftDaysWithGaps = (int) -(Math.ceil(mCurrentOrigin.x / (mWidthPerDay + mColumnGap)));
+        Log.d(TAG, "leftDaysWithGaps "+ leftDaysWithGaps);
         float startFromPixel = mCurrentOrigin.x + (mWidthPerDay + mColumnGap) * leftDaysWithGaps +
                 mHeaderColumnWidth;
+        Log.d(TAG, "startFromPixel "+ startFromPixel);
+
         float startPixel = startFromPixel;
 
         // Prepare to iterate for each day.
@@ -452,7 +470,7 @@ public class WeekView extends View {
         // Iterate through each day.
         Calendar oldFirstVisibleDay = mFirstVisibleDay;
         mFirstVisibleDay = (Calendar) mToday.clone();
-        mFirstVisibleDay.add(Calendar.DATE, leftDaysWithGaps);
+        mFirstVisibleDay.add(Calendar.DATE, leftDaysWithGaps/(Math.abs(leftDaysWithGaps)==0?1:Math.abs(leftDaysWithGaps)));
         if(!mFirstVisibleDay.equals(oldFirstVisibleDay) && mScrollListener != null){
             mScrollListener.onFirstVisibleDayChanged(mFirstVisibleDay, oldFirstVisibleDay);
         }
@@ -831,6 +849,7 @@ public class WeekView extends View {
             mFetchedMonths[2] = nextMonth;
         }
 
+        // TODO: Adapt that
         // Prepare to calculate positions of each events.
         ArrayList<EventRect> tempEvents = new ArrayList<EventRect>(mEventRects);
         mEventRects = new ArrayList<EventRect>();
@@ -838,6 +857,7 @@ public class WeekView extends View {
         dayCounter.add(Calendar.MONTH, -1);
         dayCounter.set(Calendar.DAY_OF_MONTH, 1);
         Calendar maxDay = (Calendar) day.clone();
+        // Because we want to stop at the end of the next day and not at the beginning.
         maxDay.add(Calendar.MONTH, 1);
         maxDay.set(Calendar.DAY_OF_MONTH, maxDay.getActualMaximum(Calendar.DAY_OF_MONTH));
 
@@ -1439,7 +1459,9 @@ public class WeekView extends View {
 
             if (mCurrentScrollDirection == Direction.HORIZONTAL) {
                 float leftDays = Math.round(mCurrentOrigin.x / (mWidthPerDay + mColumnGap));
+                Log.d(TAG, "onTouch leftDays"+leftDays);
                 int nearestOrigin = (int) (mCurrentOrigin.x - leftDays * (mWidthPerDay+mColumnGap));
+                Log.d(TAG, "nearest origin "+nearestOrigin);
                 mStickyScroller.startScroll((int) mCurrentOrigin.x, 0, - nearestOrigin, 0);
                 ViewCompat.postInvalidateOnAnimation(WeekView.this);
             }
@@ -1453,27 +1475,34 @@ public class WeekView extends View {
     public void computeScroll() {
         super.computeScroll();
         if (mScroller.computeScrollOffset()) {
+            Log.d(TAG, "Compute scroll is called");
             if (Math.abs(mScroller.getFinalX() - mScroller.getCurrX()) < mWidthPerDay + mColumnGap && Math.abs(mScroller.getFinalX() - mScroller.getStartX()) != 0) {
                 mScroller.forceFinished(true);
-                float leftDays = Math.round(mCurrentOrigin.x / (mWidthPerDay + mColumnGap));
+               float leftDays = Math.round(mCurrentOrigin.x / (mWidthPerDay + mColumnGap));
+                Log.d(TAG, "LeftDays "+leftDays);
+                //float leftDays = 1;
                 if(mScroller.getFinalX() < mScroller.getCurrX())
                     leftDays--;
                 else
                     leftDays++;
-                int nearestOrigin = (int) (mCurrentOrigin.x - leftDays * (mWidthPerDay+mColumnGap));
+                int nearestOrigin = (int) (mCurrentOrigin.x - leftDays*(mWidthPerDay+mColumnGap));
                 mStickyScroller.startScroll((int) mCurrentOrigin.x, 0, - nearestOrigin, 0);
                 ViewCompat.postInvalidateOnAnimation(WeekView.this);
             }
+
             else {
-                if (mCurrentFlingDirection == Direction.VERTICAL) mCurrentOrigin.y = mScroller.getCurrY();
+                if (mCurrentFlingDirection == Direction.VERTICAL)
+                    mCurrentOrigin.y = mScroller.getCurrY();
                 else mCurrentOrigin.x = mScroller.getCurrX();
                 ViewCompat.postInvalidateOnAnimation(this);
             }
         }
         if (mStickyScroller.computeScrollOffset()) {
             mCurrentOrigin.x = mStickyScroller.getCurrX();
+            Log.d(TAG, "Sticky Compute scroll is called");
             ViewCompat.postInvalidateOnAnimation(this);
         }
+        Log.d(TAG, mCurrentOrigin.x+"");
     }
 
 
@@ -1616,7 +1645,7 @@ public class WeekView extends View {
      * @param dayTwo The second day.
      * @return Whether the times are on the same day.
      */
-    private boolean isSameDay(Calendar dayOne, Calendar dayTwo) {
+    public static boolean isSameDay(Calendar dayOne, Calendar dayTwo) {
         return dayOne.get(Calendar.YEAR) == dayTwo.get(Calendar.YEAR) && dayOne.get(Calendar.DAY_OF_YEAR) == dayTwo.get(Calendar.DAY_OF_YEAR);
     }
 
