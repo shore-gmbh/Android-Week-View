@@ -481,9 +481,10 @@ public class WeekView extends View {
                 canvas.drawRect(start, 0 + mHeaderRowPadding * 2 + mTimeTextHeight/2 + mHeaderMarginBottom, startPixel + mWidthPerDay, getHeight(), sameDay ? mDayBackgroundPaint : mDayBackgroundPaint);
 
             // Prepare the separator lines for hours.
+            // TODO: remove the #mHeaderRowPadding and #mHeaderMarginBottom
             int i = 0;
-            for (int hourNumber = 0; hourNumber < 24; hourNumber++) {
-                float top = 0 + mHeaderRowPadding * 2 + mCurrentOrigin.y + mHourHeight * hourNumber + mTimeTextHeight/2 + mHeaderMarginBottom;
+            for (double hourNumber = 0; hourNumber < 24; hourNumber+=0.5) {
+                float top = (float) (0 + mHeaderRowPadding * 2 + mCurrentOrigin.y + mHourHeight * hourNumber + mTimeTextHeight/2 + mHeaderMarginBottom);
                 if (top > 0 + mHeaderRowPadding * 2 + mTimeTextHeight/2 + mHeaderMarginBottom - mHourSeparatorHeight && top < getHeight() && startPixel + mWidthPerDay - start > 0){
                     hourLines[i * 4] = start;
                     hourLines[i * 4 + 1] = top;
