@@ -121,7 +121,7 @@ public class WeekView extends View {
 
     // CurrentTime color
     private int mNowLineColor = Color.rgb(102, 102, 102);
-    private int mNowLineThickness = 5;
+    private int mNowLineThickness = 2;
     private boolean displayCurrentTimeLine = false;
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
@@ -269,7 +269,6 @@ public class WeekView extends View {
             mDayNameLength = a.getInteger(R.styleable.WeekView_dayNameLength, mDayNameLength);
             mOverlappingEventGap = a.getDimensionPixelSize(R.styleable.WeekView_overlappingEventGap, mOverlappingEventGap);
             mEventMarginVertical = a.getDimensionPixelSize(R.styleable.WeekView_eventMarginVertical, mEventMarginVertical);
-            mXScrollingSpeed = a.getFloat(R.styleable.WeekView_xScrollingSpeed, mXScrollingSpeed);
             mMinimalHeight = a.getInt(R.styleable.WeekView_eventMinDurationRepresentation, mMinimalHeight);
             mNowLineColor = a.getColor(R.styleable.WeekView_nowLineColor, mNowLineColor);
             mNowLineThickness = a.getDimensionPixelSize(R.styleable.WeekView_nowLineThickness, mNowLineThickness);
