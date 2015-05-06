@@ -15,6 +15,12 @@ Features
 * Infinite horizontal scrolling
 * Live preview of custom styling in xml preview window
 
+__Particularities of this fork__
+
+* Design of displayed date
+* Scrolls only day by day
+* Bug fixed
+
 Who uses it
 ---------------
 
@@ -117,6 +123,14 @@ You can customize the look of the `WeekView` in xml. Use the following attribute
 - `textSize`
 - `todayBackgroundColor`
 - `todayHeaderTextColor`
+
+__EXCLUSIVE_FEATURES_FROM_THIS_FORK__
+
+- `displayCurrentTimeLine` __(boolean)__
+- `nowLineColor` __(color)__
+- `nowLineThickness` __(dimension)__
+- `eventMinDurationRepresentation`__(integer | unit = minutes)__ 
+
 
 Interfaces
 ----------
