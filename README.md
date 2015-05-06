@@ -8,11 +8,9 @@ Android Week View
 Features
 ------------
 
-* Week view calendar
 * Day view calendar
 * Custom styling
 * Horizontal and vertical scrolling
-* Infinite horizontal scrolling
 * Live preview of custom styling in xml preview window
 
 __Particularities of this fork__
@@ -124,7 +122,7 @@ You can customize the look of the `WeekView` in xml. Use the following attribute
 - `todayBackgroundColor`
 - `todayHeaderTextColor`
 
-__EXCLUSIVE_FEATURES_FROM_THIS_FORK__
+__EXCLUSIVE FEATURES FROM THIS FORK__
 
 - `displayCurrentTimeLine` __(boolean)__
 - `nowLineColor` __(color)__
