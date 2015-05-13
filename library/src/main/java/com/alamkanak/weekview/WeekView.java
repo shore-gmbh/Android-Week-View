@@ -34,6 +34,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+import de.termine24.merchant.R;
+import de.termine24.merchant.helpers.Helpers;
+
 /**
  * Created by Raquib-ul-Alam Kanak on 7/21/2014.
  * Website: http://alamkanak.me
@@ -71,6 +74,9 @@ public class WeekView extends View {
     private float mDistanceY = 0;
     private float mDistanceX = 0;
     private Direction mCurrentFlingDirection = Direction.NONE;
+    private TextPaint textDayNumberPaint;
+    private TextPaint textDayNamePaint;
+
 
     // Attributes and their default values.
     private int mHourHeight = 50;
@@ -83,7 +89,7 @@ public class WeekView extends View {
     private int mHeaderRowPadding = 0;
     private int mHeaderRowBackgroundColor = Color.WHITE;
     private int mDayBackgroundColor = Color.rgb(245, 245, 245);
-    private int mHourSeparatorColor = Color.rgb(230, 230, 230);
+    private int mHourSeparatorColor = Color.rgb(143, 0, 0);
     private int mTodayBackgroundColor = Color.rgb(239, 247, 254);
     private int mHourSeparatorHeight = 2;
     private int mTodayHeaderTextColor = Color.rgb(39, 137, 228);
@@ -120,8 +126,9 @@ public class WeekView extends View {
     private ScrollListener mScrollListener;
 
     // CurrentTime color
-    private int mNowLineColor = Color.rgb(102, 102, 102);
-    private int mNowLineThickness = 2;
+    private int mNowLineColor = Color.rgb(71, 163, 209);
+    private int mNowLineThickness = 1;
+    private Paint currentTimeIndicatorPaint;
     private boolean displayCurrentTimeLine = false;
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
@@ -264,14 +271,13 @@ public class WeekView extends View {
             mTodayHeaderTextColor = a.getColor(R.styleable.WeekView_todayHeaderTextColor, mTodayHeaderTextColor);
             mEventTextSize = a.getDimensionPixelSize(R.styleable.WeekView_eventTextSize, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, mEventTextSize, context.getResources().getDisplayMetrics()));
             mEventTextColor = a.getColor(R.styleable.WeekView_eventTextColor, mEventTextColor);
-            mEventPadding = a.getDimensionPixelSize(R.styleable.WeekView_hourSeparatorHeight, mEventPadding);
+            mEventPadding = a.getDimensionPixelSize(R.styleable.WeekView_eventPadding, mEventPadding);
             mHeaderColumnBackgroundColor = a.getColor(R.styleable.WeekView_headerColumnBackground, mHeaderColumnBackgroundColor);
             mDayNameLength = a.getInteger(R.styleable.WeekView_dayNameLength, mDayNameLength);
             mOverlappingEventGap = a.getDimensionPixelSize(R.styleable.WeekView_overlappingEventGap, mOverlappingEventGap);
             mEventMarginVertical = a.getDimensionPixelSize(R.styleable.WeekView_eventMarginVertical, mEventMarginVertical);
             mMinimalHeight = a.getInt(R.styleable.WeekView_eventMinDurationRepresentation, mMinimalHeight);
             mNowLineColor = a.getColor(R.styleable.WeekView_nowLineColor, mNowLineColor);
-            mNowLineThickness = a.getDimensionPixelSize(R.styleable.WeekView_nowLineThickness, mNowLineThickness);
             displayCurrentTimeLine = a.getBoolean(R.styleable.WeekView_displayCurrentTimeLine, false);
         } finally {
             a.recycle();
@@ -282,8 +288,6 @@ public class WeekView extends View {
 
     private void init() {
         setBackgroundColor(Color.parseColor("#ffffff"));
-        // Get the date today.
-        mToday = today();
 
         // Scrolling initialization.
         mGestureDetector = new GestureDetectorCompat(mContext, mGestureListener);
@@ -329,12 +333,15 @@ public class WeekView extends View {
 
         // Prepare currentTimeLine
         // Prepare the "now" line color paint
-        mHourSeparatorPaint = new Paint();
-        mHourSeparatorPaint.setStyle(Paint.Style.FILL);
-        mHourSeparatorPaint.setColor(mNowLineColor);
+        currentTimeIndicatorPaint = new Paint();
+        currentTimeIndicatorPaint.setStyle(Paint.Style.FILL);
+        currentTimeIndicatorPaint.setColor(mNowLineColor);
 
         // Set default event color.
         mDefaultEventColor = Color.parseColor("#9fc6e7");
+
+        // Get the date today.
+        mToday = today();
     }
 
     @Override
@@ -370,29 +377,31 @@ public class WeekView extends View {
         }
 
         // Draw our cool day gradient
-        // TODO: Set the wanted color, had no time to find it out in the existing AppointementListFragment
         Drawable shape = getContext().getResources().getDrawable(R.drawable.gradient);
-        shape.setBounds(0, 0, (int) mHeaderColumnWidth, 150);
+        shape.setBounds(0, 0, (int) mHeaderColumnWidth, Helpers.pixelsFromDP(getContext(), 100));
         shape.draw(canvas);
-        Paint textDayIndicatorDayNumber = new Paint();
-        textDayIndicatorDayNumber.setColor(isSameDay(mFirstVisibleDay, today()) ? Color.BLUE : Color.BLACK);
-        textDayIndicatorDayNumber.setStyle(Paint.Style.FILL);
-        textDayIndicatorDayNumber.setAntiAlias(true);
-        textDayIndicatorDayNumber.setTextSize(50);
-        textDayIndicatorDayNumber.setFakeBoldText(true);
-        int xPos = 25;
-        int yPos = 60;
-        canvas.drawText(mDateTimeInterpreter.interpretDate(mFirstVisibleDay, true), xPos, yPos, textDayIndicatorDayNumber);
+
+        boolean isToday = isSameDay(mFirstVisibleDay, mToday);
+
+        int xPos = Helpers.pixelsFromDP(getContext(), 10);
+        int yPos = Helpers.pixelsFromDP(getContext(), 40);
+        textDayNumberPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.LINEAR_TEXT_FLAG);
+        textDayNumberPaint.setColor(isToday ? mNowLineColor : Color.BLACK);
+        textDayNumberPaint.setStyle(Paint.Style.FILL);
+        int bigTextSize = Helpers.pixelsFromDP(getContext(), 26);
+        textDayNumberPaint.setTextSize(bigTextSize);
+        textDayNumberPaint.setFakeBoldText(true);
+
+        canvas.drawText(mDateTimeInterpreter.interpretDate(mFirstVisibleDay, true), xPos, yPos, textDayNumberPaint);
 
         String toDisplay = mDateTimeInterpreter.interpretDate(mFirstVisibleDay, false);
-        Paint textIndicatorDayName = new Paint();
-        textIndicatorDayName.setColor(isSameDay(mFirstVisibleDay, today()) ? Color.BLUE : Color.BLACK);
-        textIndicatorDayName.setStyle(Paint.Style.FILL);
-        textIndicatorDayName.setAntiAlias(true);
-        textIndicatorDayName.setTextSize(25);
-        int xPos1 = 25;
-        int yPos1 = 85;
-        canvas.drawText(toDisplay, xPos1, yPos1, textIndicatorDayName);
+        int smallTextSize = Helpers.pixelsFromDP(getContext(), 14);
+        int yPos1 = yPos + smallTextSize;
+        textDayNamePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.LINEAR_TEXT_FLAG);
+        textDayNamePaint.setColor(isToday ? mNowLineColor : Color.BLACK);
+        textDayNamePaint.setStyle(Paint.Style.FILL);
+        textDayNamePaint.setTextSize(smallTextSize);
+        canvas.drawText(toDisplay, xPos, yPos1, textDayNamePaint);
 
     }
 
@@ -517,7 +526,8 @@ public class WeekView extends View {
                 float startY = mHeaderRowPadding * 2 + mTimeTextHeight / 2 + mHeaderMarginBottom + mCurrentOrigin.y;
                 Calendar now = Calendar.getInstance();
                 float beforeNow = (now.get(Calendar.HOUR_OF_DAY) + now.get(Calendar.MINUTE) / 60.0f) * mHourHeight;
-                canvas.drawRect(start, startY + beforeNow, startPixel+mWidthPerDay, startY+beforeNow+mNowLineThickness, mHourSeparatorPaint);
+                canvas.drawCircle(start+7, startY + beforeNow, 7, currentTimeIndicatorPaint);
+                canvas.drawRect(start, startY + beforeNow, startPixel+mWidthPerDay, startY+beforeNow+mNowLineThickness, currentTimeIndicatorPaint);
             }
             startPixel += mWidthPerDay + mColumnGap;
 
@@ -1106,8 +1116,9 @@ public class WeekView extends View {
                 @Override
                 public String interpretDate(Calendar date, boolean isNumber) {
                     if (!isNumber) {
-                        Locale locale = Locale.getDefault();
-                        DateFormat weekdayNameFormat = new SimpleDateFormat("EE", locale);
+                        //TODO change this to locale.getDefault();
+//                        Locale locale = Locale.getDefault();
+                        DateFormat weekdayNameFormat = new SimpleDateFormat("EE", Locale.GERMAN);
                         return weekdayNameFormat.format(date.getTime());
                     } else {
                         return date.get(Calendar.DAY_OF_MONTH) + "";
@@ -1507,7 +1518,13 @@ public class WeekView extends View {
         today.set(Calendar.SECOND, 0);
         today.set(Calendar.MILLISECOND, 0);
 
-        int dateDifference = (int) ((date.getTimeInMillis() - today.getTimeInMillis()) / (1000 * 60 * 60 * 24));
+
+        //Had to change this to floating point division because integer division had a round issue with negative numbers
+        float differenceInMilliSecondsBetwenSelectedDateAndToday = (date.getTimeInMillis() - today.getTimeInMillis());
+        float dayInMilliSeconds = (1000 * 60 * 60 * 24);
+        float value = differenceInMilliSecondsBetwenSelectedDateAndToday / dayInMilliSeconds;
+        int dateDifference = (int) Math.round(value);
+
         mCurrentOrigin.x = - dateDifference * (mWidthPerDay + mColumnGap);
         // mStickyScroller.startScroll((int) mCurrentOrigin.x, 0, (int) (-dateDifference*(mWidthPerDay + mColumnGap)-mCurrentOrigin.x), 0);
         invalidate();
